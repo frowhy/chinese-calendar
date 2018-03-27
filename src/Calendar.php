@@ -342,12 +342,11 @@ class Calendar
     /**
      * 农历年份转换为干支纪年.
      *
-     * @param int      $lunarYear
-     * @param null|int $termIndex
+     * @param int $lunarYear
      *
      * @return string
      */
-    public function ganZhiYear($lunarYear, $termIndex = null)
+    public function ganZhiYear($lunarYear)
     {
         $ganKey = ($lunarYear - 3) % 10;
         $zhiKey = ($lunarYear - 3) % 12;
@@ -360,13 +359,6 @@ class Calendar
         // 如果余数为 0 则为最后一个地支
         if (0 === $zhiKey) {
             $zhiKey = 12;
-        }
-
-        if (null !== $termIndex) {
-            if (3 > $termIndex) {
-                $ganKey += 1;
-                $zhiKey += 1;
-            }
         }
 
         return $this->gan[$ganKey - 1] . $this->zhi[$zhiKey - 1];
@@ -496,21 +488,13 @@ class Calendar
      *
      * 仅能大致转换, 精确划分生肖分界线是 “立春”.
      *
-     * @param int      $year
-     * @param null|int $termIndex
+     * @param int $year
      *
      * @return string
      */
-    public function getAnimal($year, $termIndex = null)
+    public function getAnimal($year)
     {
-        $animalIndex = ($year - 4) % 12;
-        if (null !== $termIndex) {
-            if (3 > $termIndex) {
-                $animalIndex += 1;
-            }
-        }
-
-        return $this->animals[$animalIndex];
+        return $this->animals[($year - 4) % 12];
     }
 
     /**
@@ -526,13 +510,13 @@ class Calendar
             return null;
         }
 
-        $gan = substr($ganZhi, 2);
+        $gan = mb_substr($ganZhi, 0, 1);
 
         if (!$gan) {
             return null;
         }
 
-        return $this->color[array_search($this->gan, $gan)];
+        return $this->color[array_search($gan, $this->gan)];
     }
 
     /**
@@ -548,13 +532,13 @@ class Calendar
             return null;
         }
 
-        $gan = substr($ganZhi, 2);
+        $gan = mb_substr($ganZhi, 0, 1);
 
         if (!$gan) {
             return null;
         }
 
-        return $this->wuXing[array_search($this->gan, $gan)];
+        return $this->wuXing[array_search($gan, $this->gan)];
     }
 
     /**
@@ -656,15 +640,13 @@ class Calendar
         }
 
         // 获取该天的节气
-        $termIndex = null;
+        $term = null;
         if ($firstNode == $day) {
-            $termIndex = $month * 2 - 2;
+            $term = $this->solarTerm[$month * 2 - 2];
         }
-
         if ($secondNode == $day) {
-            $termIndex = $month * 2 - 1;
+            $term = $this->solarTerm[$month * 2 - 1];
         }
-        $term = $this->solarTerm[$termIndex];
 
         // 日柱 当月一日与 1900/1/1 相差天数
         $dayCyclical = $this->dateDiff("{$year}-{$month}-01", '1900-01-01')->days + 10;
@@ -674,7 +656,7 @@ class Calendar
         // 时柱和时辰
         list($ganZhiHour, $lunarHour, $hour) = $this->ganZhiHour($hour, $dayCyclical);
 
-        $ganZhiYear = $this->ganZhiYear($lunarYear, $termIndex);
+        $ganZhiYear = $this->ganZhiYear($lunarYear);
 
         return [
             'lunar_year'          => (string)$lunarYear,
@@ -697,7 +679,7 @@ class Calendar
             'color_month'         => $this->getColor($ganZhiMonth),
             'color_day'           => $this->getColor($ganZhiDay),
             'color_hour'          => $this->getColor($ganZhiHour),
-            'animal'              => $this->getAnimal($lunarYear, $termIndex),
+            'animal'              => $this->getAnimal($lunarYear),
             'term'                => $term,
             'is_leap'             => $isLeap,
         ];
