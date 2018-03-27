@@ -68,7 +68,7 @@ class Calendar
      *
      * @var array
      */
-    protected $color = ['青', '青', '红', '红', '黄', '黄', '白', '白', '黑', '黑'];
+    protected $colors = ['青', '青', '红', '红', '黄', '黄', '白', '白', '黑', '黑'];
 
     /**
      * 天干地支之天干速查表 <=> 五行.
@@ -516,7 +516,7 @@ class Calendar
             return null;
         }
 
-        return $this->color[array_search($gan, $this->gan)];
+        return $this->colors[array_search($this->gan, $gan)];
     }
 
     /**
